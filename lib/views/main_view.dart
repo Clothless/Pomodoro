@@ -1,4 +1,9 @@
+import 'dart:async';
+import 'dart:math';
+
 import 'package:flutter/material.dart';
+import 'package:pomodoro/custom/custom_button.dart';
+import 'package:pomodoro/custom/custom_text.dart';
 
 class MainView extends StatefulWidget {
   const MainView({super.key});
@@ -8,8 +13,145 @@ class MainView extends StatefulWidget {
 }
 
 class _MainViewState extends State<MainView> {
+
+  late List<int> available = <int>[1, 10, 15, 20, 25, 30, 35, 40, 45, 50];
+  late int selectedValue = available[4];
+  late double percentage = 0.0;
+  late int duration = (selectedValue*60);
+  Timer? timer;
+
+  void count(){
+    timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      setState(() {
+        percentage += (100/(selectedValue*60));
+        duration -= 1;
+        if(percentage>100){
+          percentage = 0.0;
+          timer?.cancel();
+        }
+      });
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+   
+  }
+
+
+
   @override
   Widget build(BuildContext context) {
-    return const Placeholder();
+    return Scaffold(
+      body: Center(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const SizedBox(height: 100,),
+            SizedBox(
+              width: 250,
+              height: 250,
+              child: CustomPaint(
+                foregroundPainter: MyPainter(
+                    lineColor: Colors.grey,
+                    completeColor: Colors.red,
+                    completePercent: percentage,
+                    width: 8.0,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: GestureDetector(
+                    onTap: () {
+                      count();
+                    },
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20,),
+            CustomText(
+              // text: duration.toString(),
+              text: Duration(minutes: (duration/60).toInt(), seconds: (duration%60)).toString().substring(2,7),
+              fontSize: 30,
+              fontColor: Colors.black,
+            ),
+            const SizedBox(height: 20,),
+            DropdownMenu(
+              initialSelection: selectedValue,
+              onSelected: (int ?value) {
+                setState(() {
+                  selectedValue = value!;
+                  duration = (value * 60);
+                });
+              },
+              dropdownMenuEntries: available.map<DropdownMenuEntry<int>>((int value) {
+                return DropdownMenuEntry<int>(value: value, label: value.toString());
+              }).toList(),
+              ),
+            const SizedBox(height: 20,),
+            CustomButton(
+              text: "Start",
+              fontSize: 20,
+              fontColor: Colors.white,
+              backgroundColor: Colors.red,
+              click: (){
+
+              },
+              borderRadius: 10,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+
+
+
+
+class MyPainter extends CustomPainter{
+  Color lineColor;
+  Color completeColor;
+  double completePercent;
+  double width;
+  MyPainter({
+    required this.lineColor,
+    required this.completeColor,
+    required this.completePercent,
+    required this.width,
+    });
+  @override
+  void paint(Canvas canvas, Size size) {
+    Paint line = new Paint()
+        ..color = lineColor
+        ..strokeCap = StrokeCap.round
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = width;
+    Paint complete = new Paint()
+      ..color = completeColor
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = width;
+    Offset center  = new Offset(size.width/2, size.height/2);
+    double radius  = min(size.width/2,size.height/2);
+    canvas.drawCircle(
+        center,
+        radius,
+        line
+    );
+    double arcAngle = 2*pi* (completePercent/100);
+    canvas.drawArc(
+        new Rect.fromCircle(center: center,radius: radius),
+        -pi/2,
+        arcAngle,
+        false,
+        complete
+    );
+  }
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) {
+    return true;
   }
 }
