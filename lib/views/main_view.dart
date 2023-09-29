@@ -19,14 +19,18 @@ class _MainViewState extends State<MainView> {
   late double percentage = 0.0;
   late int duration = (selectedValue*60);
   Timer? timer;
+  bool notUsed = true;
 
   void count(){
     timer = Timer.periodic(const Duration(seconds: 1), (_) {
       setState(() {
+        notUsed = false;
         percentage += (100/(selectedValue*60));
         duration -= 1;
         if(percentage>100){
+          notUsed = true;
           percentage = 0.0;
+          duration = (selectedValue*60);
           timer?.cancel();
         }
       });
@@ -63,7 +67,9 @@ class _MainViewState extends State<MainView> {
                   padding: const EdgeInsets.all(8.0),
                   child: GestureDetector(
                     onTap: () {
+                      if(notUsed){
                       count();
+                      }
                     },
                   ),
                 ),
@@ -86,19 +92,31 @@ class _MainViewState extends State<MainView> {
                 });
               },
               dropdownMenuEntries: available.map<DropdownMenuEntry<int>>((int value) {
-                return DropdownMenuEntry<int>(value: value, label: value.toString());
+                return DropdownMenuEntry<int>(value: value, label: (value.toString() + " Min"));
               }).toList(),
               ),
             const SizedBox(height: 20,),
-            CustomButton(
-              text: "Start",
-              fontSize: 20,
-              fontColor: Colors.white,
-              backgroundColor: Colors.red,
-              click: (){
-
+            GestureDetector(
+              onTap: () {
+                setState(() {
+                  notUsed = true;
+                  percentage = 0.0;
+                  duration = (selectedValue*60);
+                  timer?.cancel();
+                });
               },
-              borderRadius: 10,
+              child: Container(
+                padding: EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.red,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: CustomText(
+                  text: "Cancel",
+                  fontColor: Colors.white,
+                  fontSize: 26,
+                ),
+              )
             ),
           ],
         ),
