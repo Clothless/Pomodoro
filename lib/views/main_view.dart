@@ -21,8 +21,10 @@ class _MainViewState extends State<MainView> {
   late int duration = (selectedValue*60);
   Timer? timer;
   bool notUsed = true;
+  bool dropDown = true;
 
   void count(){
+    dropDown = false;
     timer = Timer.periodic(const Duration(seconds: 1), (_) {
       setState(() {
         notUsed = false;
@@ -97,6 +99,7 @@ class _MainViewState extends State<MainView> {
             // Select Time
             DropdownMenu(
               initialSelection: selectedValue,
+              enabled: dropDown,
               onSelected: (int ?value) {
                 setState(() {
                   selectedValue = value!;
@@ -118,6 +121,7 @@ class _MainViewState extends State<MainView> {
                   duration = (selectedValue*60);
                   AudioPlayer().play(AssetSource("audio/cancel.mp3"));
                   timer?.cancel();
+                  dropDown = true;
                 });
               },
               child: Container(
