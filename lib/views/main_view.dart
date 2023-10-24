@@ -1,8 +1,9 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
-import 'package:pomodoro/custom/custom_button.dart';
+import 'package:flutter/services.dart';
 import 'package:pomodoro/custom/custom_text.dart';
 
 class MainView extends StatefulWidget {
@@ -32,6 +33,7 @@ class _MainViewState extends State<MainView> {
           percentage = 0.0;
           duration = (selectedValue*60);
           timer?.cancel();
+          AudioPlayer().play(AssetSource("audio/completed.mp3"));
         }
       });
     });
@@ -50,9 +52,8 @@ class _MainViewState extends State<MainView> {
     return Scaffold(
       body: Center(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const SizedBox(height: 100,),
             SizedBox(
               width: 250,
               height: 250,
@@ -66,6 +67,13 @@ class _MainViewState extends State<MainView> {
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: GestureDetector(
+                    child: const Center(
+                      child: CustomText(
+                        text: "Start",
+                        fontSize: 30,
+                        fontColor: Colors.black,
+                      ),
+                    ),
                     onTap: () {
                       if(notUsed){
                       count();
@@ -76,13 +84,17 @@ class _MainViewState extends State<MainView> {
               ),
             ),
             const SizedBox(height: 20,),
+
+            // Timer
             CustomText(
               // text: duration.toString(),
-              text: Duration(minutes: (duration/60).toInt(), seconds: (duration%60)).toString().substring(2,7),
+              text: Duration(minutes: duration~/60, seconds: (duration%60)).toString().substring(2,7),
               fontSize: 30,
               fontColor: Colors.black,
             ),
             const SizedBox(height: 20,),
+
+            // Select Time
             DropdownMenu(
               initialSelection: selectedValue,
               onSelected: (int ?value) {
@@ -92,26 +104,29 @@ class _MainViewState extends State<MainView> {
                 });
               },
               dropdownMenuEntries: available.map<DropdownMenuEntry<int>>((int value) {
-                return DropdownMenuEntry<int>(value: value, label: (value.toString() + " Min"));
+                return DropdownMenuEntry<int>(value: value, label: ("$value Min"));
               }).toList(),
               ),
             const SizedBox(height: 20,),
+            
+            // Stop Timer
             GestureDetector(
               onTap: () {
                 setState(() {
                   notUsed = true;
                   percentage = 0.0;
                   duration = (selectedValue*60);
+                  AudioPlayer().play(AssetSource("audio/cancel.mp3"));
                   timer?.cancel();
                 });
               },
               child: Container(
-                padding: EdgeInsets.all(10),
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: Colors.red,
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: CustomText(
+                child: const CustomText(
                   text: "Cancel",
                   fontColor: Colors.white,
                   fontSize: 26,
@@ -142,17 +157,17 @@ class MyPainter extends CustomPainter{
     });
   @override
   void paint(Canvas canvas, Size size) {
-    Paint line = new Paint()
+    Paint line = Paint()
         ..color = lineColor
         ..strokeCap = StrokeCap.round
         ..style = PaintingStyle.stroke
         ..strokeWidth = width;
-    Paint complete = new Paint()
+    Paint complete = Paint()
       ..color = completeColor
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke
       ..strokeWidth = width;
-    Offset center  = new Offset(size.width/2, size.height/2);
+    Offset center  = Offset(size.width/2, size.height/2);
     double radius  = min(size.width/2,size.height/2);
     canvas.drawCircle(
         center,
@@ -161,7 +176,7 @@ class MyPainter extends CustomPainter{
     );
     double arcAngle = 2*pi* (completePercent/100);
     canvas.drawArc(
-        new Rect.fromCircle(center: center,radius: radius),
+        Rect.fromCircle(center: center,radius: radius),
         -pi/2,
         arcAngle,
         false,
